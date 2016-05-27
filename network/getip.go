@@ -29,3 +29,12 @@ func GetIp() (addlist []string) {
 	}
 	return
 }
+
+//GetServerPort("tcp", "www")
+func GetServerPort(protocol, service string) (port int) {
+	port, err := net.LookupPort(protocol, service)
+	if err != nil {
+		return 0
+	}
+	return
+}
