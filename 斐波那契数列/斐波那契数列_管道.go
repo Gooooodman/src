@@ -22,7 +22,8 @@ func main() {
 	quit := make(chan int)
 	go func() {
 		for i := 0; i < 10; i++ {
-			fmt.Println(<-c)
+			//c 接收一次 算一次i
+			fmt.Println(i, <-c)
 		}
 		quit <- 0
 	}()
