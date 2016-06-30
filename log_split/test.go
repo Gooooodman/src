@@ -18,6 +18,7 @@ func ReadLine(fileName string) (error, map[int]map[string]string) {
 	buf := bufio.NewReader(f)
 
 	Binfo := make(map[int]map[string]string)
+
 	num := 0
 	for {
 		line, err := buf.ReadString('\n')
@@ -39,17 +40,18 @@ func ReadLine(fileName string) (error, map[int]map[string]string) {
 		S_line := strings.Replace(r.ReplaceAllString(o, "&localtime="), "http://sdklog.tj.65.com/1.html?", "", 1)
 		sp_one := strings.Split(S_line, "&")
 
-		info, ok := Binfo[num]
-		if !ok {
-			info = make(map[string]string)
-			Binfo[num] = info
-			for _, v := range sp_one {
-				v1 := strings.Split(v, "=")
-				//fmt.Println(v1[1])
-				info[v1[0]] = v1[1]
-			}
-			num++
+		//info, ok := Binfo[num]
+		info := make(map[string]string)
+		//if !ok {
+
+		for _, v := range sp_one {
+			v1 := strings.Split(v, "=")
+			//fmt.Println(v1[1])
+			info[v1[0]] = v1[1]
 		}
+		Binfo[num] = info
+		num++
+		//}
 
 	}
 	return nil, Binfo
@@ -76,7 +78,8 @@ func main() {
 	// })
 
 	e, B := ReadLine("test2.log")
+	fmt.Println(len(B))
 	if e == nil {
-		fmt.Println(B)
+		fmt.Println(B[2])
 	}
 }
