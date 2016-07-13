@@ -41,10 +41,6 @@ func main() {
 
 func ServeClient(conn net.Conn) {
 	defer conn.Close()
-	// errc := os.Chdir("F:\\Good\\go\\src\\tcp_server")
-	// if errc != nil {
-	// 	return
-	// }
 	for {
 		str := ReadData(conn)
 		connFrom := conn.RemoteAddr().String()
@@ -84,7 +80,8 @@ func ListDir(conn net.Conn) {
 	var str string
 	for i, j := 0, len(files); i < j; i++ {
 		f := files[i]
-		str += f.Name() + "\t"
+		//str += f.Name() + "\t"   格式化输出
+		str += fmt.Sprintf("%-50s\t", f.Name())
 		if f.IsDir() {
 			str += "dir\r\n"
 		} else {
