@@ -23,7 +23,8 @@ const (
 )
 
 func main() {
-	var url = "http://tieba.baidu.com/p/4683070856"
+	var url = "http://tieba.baidu.com/p/4676296099"
+
 	p, err := goquery.ParseUrl(url)
 	if err != nil {
 		panic(err)
@@ -33,14 +34,23 @@ func main() {
 		t := p.Find("").Attrs("src")
 		//fmt.Println(p.Find("pre#line1"))
 		// t := p.Find(".attribute-value a")
-		for _, h := range t {
-			Select_img(h)
+		ch := make([]chan bool, len(t))
+		// for _, h := range t {
+		// 	Select_img(h)
+		// }
+		for i, h := range t {
+			ch[i] = make(chan bool)
+			go Select_img(h, ch[i])
 		}
 
+		for _, c := range ch {
+			<-c
+		}
 	}
+
 }
 
-func Select_img(url string) {
+func Select_img(url string, ch chan bool) {
 	uls := strings.Split(url, "/")
 	//fmt.Println(uls[0], string(uls[2]))
 	head := fmt.Sprintf("%s//%s", uls[0], uls[2])
@@ -48,6 +58,8 @@ func Select_img(url string) {
 	if head == Prefix {
 		getImg(url)
 	}
+	ch <- true
+	close(ch)
 }
 
 func getImg(url string) (n int64, err error) {
