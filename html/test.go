@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"github.com/opesun/goquery"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	//"time"
 )
 
 const (
@@ -22,10 +24,11 @@ const (
 	Suffix = "jpg"
 )
 
-func main() {
-	var url = "http://tieba.baidu.com/p/4676296099"
+var url = flag.String("url", "http://tieba.baidu.com/p/4676296099", "separator")
 
-	p, err := goquery.ParseUrl(url)
+func main() {
+	flag.Parse()
+	p, err := goquery.ParseUrl(*url)
 	if err != nil {
 		panic(err)
 	} else {
