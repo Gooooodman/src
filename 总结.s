@@ -33,14 +33,27 @@ chan <- int 只写
 
 
 
+----------------------------------------------------------------
+
+#Sscanf从字符串str扫描文本，根据format 参数指定的格式将成功读取的空白分隔的值保存进成功传递给本函数的参数。返回成功扫描的条目个数和遇到的任何错误。
+    var unit string
+    var v float64
+    str := "30.6C"
+    fmt.Println(fmt.Sscanf(str, "%f%s", &v, &unit))
+    fmt.Println(v)
+    fmt.Println(unit)
+
+
+
+----------------------------------------------
+    var input string
+    fmt.Scanln(&input)
 
 
 
 
 
 
-
-
-
-
+fmt.Printf("%s\n",xx)
+xx 可以是[]byte
 
