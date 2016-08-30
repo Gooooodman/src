@@ -37,34 +37,21 @@ func Use() {
 
 func main() {
 	flag.Parse()
-	// fmt.Println(*FileName)
-	// fmt.Println(*Name)
-	// fmt.Println(*Conffile)
-	// f, err := ioutil.ReadFile(file)
-	// if err != nil {
-	// 	fmt.Printf("%s\n", err)
-	// 	panic(err)
-	// }
-	// fmt.Println(string(f))
-	//fmt.Println("########################################################################")
 	filelist := []string{}
 
 	b := Exist(*FileName)
 	if !b {
-		fmt.Println("ini文件不存在.")
+		fmt.Println("初始default.ini文件不存在.")
 		Use()
 		return
 	}
 	b = Exist(*Conffile)
 	if !b {
-		fmt.Println("hostname文件不存在.")
+		fmt.Println("初始default.conf文件不存在.")
 		Use()
 		return
 	}
 	context := read3(*FileName)
-	// context = strings.Replace(context, "120.55.164.160", "139.196.179.114", -1)
-	// //fmt.Println(context)
-	// file1, _ := os.Create("al_gwlm_gs_9011_139-196-179-114.ini")
 	f, err := os.Open(*Conffile)
 	if err != nil {
 		panic(err)
@@ -73,49 +60,29 @@ func main() {
 	rd := bufio.NewReader(f)
 	for {
 		line, err := rd.ReadString('\n') //以'\n'为结束符读入一行
-		line = strings.TrimSpace(line)
+		line = strings.TrimSpace(line)   // 去掉前后端所有空白
 		if err != nil || io.EOF == err {
 			break
 		}
 		filelist = append(filelist, line)
 	}
-	// fmt.Println(filelist)
-	// fmt.Println(len(filelist))
-	// for i, n := range filelist {
-	// 	fmt.Println(i, "----->", n)
-	// }
-	// return
-	//chs := make(chan int, len(filelist))
-	for _, f := range filelist {
-		//chs[i] = make(chan int)
+	chs := make([]chan int, len(filelist))
+	for i, f := range filelist {
+		chs[i] = make(chan int)
 		//go func(f string, c chan int) {
-		//f = strings.Replace(f, "\n", "", 2)
-		//n := strings.Replace(f, "\n", ".ini", 1)
-		//n = n + ".ini"
-		//fmt.Println(n)
 		newfile := fmt.Sprintf("%s.ini", f)
-		//fmt.Println(strings.Replace(newfile, "\n", "", 1))
-		//fmt.Println(newfile)
 		a := strings.Split(f, "_")
 		newip := strings.Replace(a[4], "-", ".", -1)
-		//return
-		//newip := "000.000.000.000"
-		WriteFile(context, newfile, *Name, newip)
+		go WriteFile(context, newfile, *Name, newip, chs[i])
 		//}(f, chs[i])
 	}
-	//WriteFile(context, "default.ini", "root", "1.1.1.1")
-	// defer file1.Close()
-	// n, err := io.WriteString(file1, context)
-	// if err != nil {
-	// 	fmt.Println(n)
-	// }
-	// for _, ch := range chs {
-	// 	fmt.Println(<-ch)
-	// }
+	for _, ch := range chs {
+		<-ch
+	}
 
 }
 
-func WriteFile(context string, newfile string, newname string, newip string) {
+func WriteFile(context string, newfile string, newname string, newip string, c chan int) {
 	r, _ := regexp.Compile("S:\"Hostname\"=.*")
 	//context = strings.Replace(context, "120.55.164.160", newip, -1)
 	Hostname := fmt.Sprintf("S:\"Hostname\"=%s", newip)
@@ -131,5 +98,6 @@ func WriteFile(context string, newfile string, newname string, newip string) {
 		panic(err)
 	}
 	fmt.Printf("%s write Ok..\n", newfile)
-
+	c <- 1
+	close(c)
 }
