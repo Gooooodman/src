@@ -23,6 +23,29 @@ func main() {
 	//fmt.Println(cmd.Stdout.)
 }
 
+// ******************************************************   //
+/*
+func NewCommandJob(id int, name string, command string) *Job {
+	job := &Job{
+		id:   id,
+		name: name,
+	}
+	job.runFunc = func(timeout time.Duration) (string, string, error, bool) {
+		bufOut := new(bytes.Buffer)
+		bufErr := new(bytes.Buffer)
+		cmd := exec.Command("/bin/bash", "-c", command)
+		cmd.Stdout = bufOut
+		cmd.Stderr = bufErr
+		cmd.Start()
+		err, isTimeout := runCmdWithTimeout(cmd, timeout)
+
+		return bufOut.String(), bufErr.String(), err, isTimeout
+	}
+	return job
+}
+*/
+// ****************************************************  //
+
 //使用bufio 不好实现
 // func main() {
 // 	//执行ls命令  exec.Command("/bin/ls", "-l", "/")
