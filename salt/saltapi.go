@@ -27,20 +27,22 @@ const (
 	//serverUrl = "https://139.196.231.187:8888/"
 )
 
-type Ret struct {
-	// Perms  []string
-	// Start  float64
-	Token string
-	// Expire float64
-	// User   string
-	// Eauth  string
-}
+// type Ret struct {
+// 	// Perms  []string
+// 	// Start  float64
+// 	Token string
+// 	// Expire float64
+// 	// User   string
+// 	// Eauth  string
+// }
 
+// 2个struct 合成一个
+//http://json2struct.mervine.net/
 type Obj struct {
-	Return []Ret `json:"return"` // json  解码可以不用
+	Return []struct {
+		Token string
+	} `json:"return"` // json  解码可以不用
 }
-
-var obj Obj
 
 // ssl  忽略认证  保存token
 func (S *Server) GetToken() {
@@ -53,6 +55,7 @@ func (S *Server) GetToken() {
 	values.Add("password", password)
 	values.Add("eauth", eauth)
 	result, _ := S.RequestPost("POST", serverUrl+"/login", values)
+	obj := &Obj{}
 	json.Unmarshal([]byte(result), &obj)
 	S.Token = obj.Return[0].Token
 }
@@ -99,7 +102,6 @@ func (S *Server) RequestPost(method, serverUrl string, values url.Values) (strin
 		log.Println("Request.. ", err)
 		return "", err
 	}
-
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Auth-Token", S.Token)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded") //没有出现：406 Not Acceptable <nil>

@@ -13,8 +13,8 @@ func Test(ch chan int) {
 }
 
 func main() {
-	chs := make([]chan int, 10)
-	for i := 0; i < 10; i++ {
+	chs := make([]chan int, 30)
+	for i := 0; i < 30; i++ {
 		chs[i] = make(chan int, 10) //满10 才阻塞         异步通道 达到消息队列的效果  传输大量数据
 		go Test(chs[i])
 

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bytes"
+	//"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	//"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -18,15 +18,15 @@ type Server struct {
 	Password string `json:"password"`
 	Eauth    string `json:"eauth"`
 	Token    string `json:"token"`
-	client   *http.Client
+	Client   *http.Client
 }
 
 const (
-	username = "saltapi"
-	password = "saltapi"
-	eauth    = "pam"
-	//serverUrl      = "https://192.168.30.129:8888/"
-	serverUrl = "https://139.196.231.187:8888/"
+	username  = "saltapi"
+	password  = "saltapi"
+	eauth     = "pam"
+	serverUrl = "https://192.168.30.129:8888/"
+	//serverUrl = "https://139.196.231.187:8888/"
 )
 
 type Ret struct {
@@ -44,38 +44,19 @@ type Obj struct {
 
 var obj Obj
 
-var S *Server = new(Server)
+//var S *Server = new(Server)
 
 // ssl  忽略认证
-func Client() {
+func (S *Server) GetToken() {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	S.client = &http.Client{Transport: tr}
-	// }
-
-	// func Login() {
-	S.Username = username
-	S.Password = password
-	S.Eauth = eauth
-	//client := Client()
-	b, err := json.Marshal(S)
-	if err != nil {
-		fmt.Println("json err:", err)
-	}
-	body := bytes.NewBuffer([]byte(b))
-	res, err := S.client.Post(serverUrl+"/login", "application/json;charset=utf-8", body)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	result, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
+	S.Client = &http.Client{Transport: tr}
+	values := url.Values{}
+	values.Add("username", username)
+	values.Add("password", password)
+	values.Add("eauth", eauth)
+	result := S.RequestPost("POST", serverUrl+"/login", values)
 	json.Unmarshal([]byte(result), &obj)
 	S.Token = obj.Return[0].Token
 }
@@ -87,7 +68,7 @@ func (S *Server) ListALLKey() (string, error) {
 	}
 
 	req.Header.Add("X-Auth-Token", S.Token)
-	res, err := S.client.Do(req)
+	res, err := S.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -103,50 +84,129 @@ func (S *Server) ListALLKey() (string, error) {
 	return string(body), nil
 }
 
-func (S *Server) Execution(tgt, fun, arg string) {
+// cmd.run 需要arg  ,test.ping 则不需要
+func (S *Server) Execution(tgt, fun, arg string) string {
 	values := url.Values{}
 	values.Add("client", "local")
 	values.Add("fun", fun)
-	values.Add("arg", arg)
-	values.Add("tgt", "*")
+	if arg != "" {
+		values.Add("arg", arg)
+	}
+	values.Add("tgt", tgt)
 	//fmt.Println(strings.NewReader(values.Encode()))
 	//Encode方法将v编码为url编码格式("bar=baz&foo=quux")，编码时会以键进行排序。
-	req, err := http.NewRequest("POST", serverUrl, strings.NewReader(values.Encode()))
+	return S.RequestPost("POST", serverUrl, values)
+}
+
+// 配置模板
+func (S *Server) DeployMouldel(tgt, arg string) string {
+	values := url.Values{}
+	values.Add("client", "local")
+	values.Add("fun", "state.sls")
+	values.Add("tgt", tgt)
+	values.Add("arg", arg)
+	return S.RequestPost("POST", serverUrl, values)
+}
+
+func (S *Server) RequestPost(method, serverUrl string, values url.Values) string {
+	//fmt.Println(strings.NewReader(values.Encode()))
+	//Encode方法将v编码为url编码格式("bar=baz&foo=quux")，编码时会以键进行排序。
+	req, err := http.NewRequest(method, serverUrl, strings.NewReader(values.Encode()))
 	if err != nil {
 		fmt.Println("new...", err)
-		return
+		return ""
 	}
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Auth-Token", S.Token)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded") //没有出现：406 Not Acceptable <nil>
-	res, err := S.client.Do(req)
+	res, err := S.Client.Do(req)
 	if err != nil {
 		fmt.Println("do ...", err)
-		return
+		return ""
 	}
 	if res.StatusCode != 200 {
 		fmt.Println(res.Status, err)
-		return
+		return ""
 	}
 	defer res.Body.Close()
 	context, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println("read:  ", err)
+		return ""
 	}
-	fmt.Printf("%s\n", context)
+	return string(context)
+}
+
+func (S *Server) AsyncDeployMouldel(tgt, arg string) string {
+	values := url.Values{}
+	values.Add("client", "local_async")
+	values.Add("fun", "state.sls")
+	values.Add("tgt", tgt)
+	values.Add("arg", arg)
+	return S.RequestPost("POST", serverUrl, values)
+}
+
+//通过jid 获取内容,没有jid 则获取所有jid
+func (S *Server) GetAsyncContent(job_id string) string {
+	if job_id == "" {
+		return S.RequestPost("GET", serverUrl+"/jobs/", nil)
+	}
+	return S.RequestPost("GET", serverUrl+"/jobs/"+job_id, nil)
+}
+
+func (S *Server) Events() string {
+	return S.RequestPost("GET", serverUrl+"/events/", nil)
+}
+
+//获取minion 的基本信息
+func (S *Server) Minions(minion string) string {
+	if minion != "" && minion != "*" {
+		return S.RequestPost("GET", serverUrl+"/minions/"+minion, nil)
+	}
+	return S.RequestPost("GET", serverUrl+"/minions/", nil)
+}
+
+//管理key  way 方式
+func (S *Server) ManageKey(way, id string) string {
+	values := url.Values{}
+	values.Add("client", "wheel")
+	if way == "accept" {
+		values.Add("fun", "key.accept")
+	} else {
+		values.Add("fun", "key.delete")
+	}
+	values.Add("match", id)
+	return S.RequestPost("POST", serverUrl, values)
 }
 
 func main() {
-	Client()
+	var S *Server = new(Server)
+	S.GetToken()
 	// ret, _ := obj.ListALLKey()
 	// fmt.Println(ret)
 
-	tgt := "data-2"
-	fun := "cmd.run"
-	arg := "df -h"
-	S.Execution(tgt, fun, arg)
+	//tgt := "data-2"
+	//fun := "test.ping"
+	//arg := "nginx"
+	// fmt.Println(S.Execution(tgt, fun, arg))
 	//fmt.Println("go")
 	// Login()
 	// fmt.Println(S)
+	//S.DeployMouldel(tgt, arg)
+	// values := url.Values{}
+	// values.Add("client", "local")
+	// values.Add("fun", "state.sls")
+	// values.Add("tgt", tgt)
+	// values.Add("arg", arg)
+	// RequestPost("POST", serverUrl, values)
+	//fmt.Println(S.AsyncDeployMouldel(tgt, arg))
+	//fmt.Println(S.GetAsyncContent(""))
+	//fmt.Println(S.Minions(""))
+	//ret, _ := S.ListALLKey()
+	//fmt.Println(ret)
+	// S.AcceptKey("accept", "data-2")
+	ret, _ := S.ListALLKey()
+	fmt.Println(ret)
+
 }

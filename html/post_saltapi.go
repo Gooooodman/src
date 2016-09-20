@@ -24,12 +24,12 @@ const (
 )
 
 type Ret struct {
-	Perms  []string
-	Start  float64
-	Token  string
-	Expire float64
-	User   string
-	Eauth  string
+	// Perms  []string
+	// Start  float64
+	Token string
+	// Expire float64
+	// User   string
+	// Eauth  string
 }
 
 type Obj struct {
@@ -73,8 +73,8 @@ func main() {
 	// // json.Unmarshal([]byte(m["return"]), &obj)
 	//******************************************************************//
 	// //断言
-	// // m = obj.(map[string]interface{})
-	// // fmt.Println(m)
+	// m = obj.(map[string]interface{})
+	// fmt.Println(m)
 	// // for i, v := range m["return"] {
 	// // 	fmt.Println(i, v)
 	// // }

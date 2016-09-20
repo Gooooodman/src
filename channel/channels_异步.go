@@ -16,7 +16,7 @@ func Worker(sem chan int, lock chan bool, id int) {
 }
 
 func main() {
-	ch := make(chan int, 2)
+	ch := make(chan int, 10) //这里10 容量 ，2 则随机出现9 程序退出
 	lock := make(chan bool)
 	for i := 0; i < 10; i++ {
 		go Worker(ch, lock, i)
