@@ -20,8 +20,8 @@ func Count(i int, ch chan int) {
 
 func main() {
 	//runtime.GOMAXPROCS(runtime.NumCPU())
-	chs := make([]chan int, 40)
-	for i := 0; i < 40; i++ {
+	chs := make([]chan int, 80)
+	for i := 0; i < 80; i++ {
 		chs[i] = make(chan int)
 		go Count(i, chs[i])
 	}

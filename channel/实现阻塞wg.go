@@ -10,12 +10,12 @@ func main() {
 	//使用全部cpu核心
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	wg := sync.WaitGroup{}
-	wg.Add(40)
+	wg.Add(40) // 填充
 	for i := 0; i < 40; i++ {
 		go Count(&wg, i)
 	}
 
-	wg.Wait()
+	wg.Wait() //等待完成
 }
 
 func Count(wg *sync.WaitGroup, i int) {
@@ -25,5 +25,5 @@ func Count(wg *sync.WaitGroup, i int) {
 		a += i
 	}
 	fmt.Println(i, ": Counting", a)
-	wg.Done()
+	wg.Done() // 完成一次减一次
 }
