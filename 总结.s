@@ -57,3 +57,47 @@ chan <- int 只写
 fmt.Printf("%s\n",xx)
 xx 可以是[]byte
 
+
+
+
+
+
+//                包中的init会先调用
+
+package salt
+
+import (
+    "fmt"
+)
+
+func init() {
+    fmt.Println("salt init")
+}
+
+func Salttest() {
+    fmt.Println("salttest")
+}
+
+
+//调用
+package main
+
+import (
+    //"fmt"
+    "salt"
+)
+
+func main() {
+    // var S *salt.Server = new(salt.Server)
+    // S.GetToken()
+    // //fmt.Println(S)
+    // ret := S.ListALLKey()
+    // fmt.Println(ret)
+    salt.Salttest()
+
+}
+
+//结果
+
+salt init
+salttest
