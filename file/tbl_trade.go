@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"strings"
 	//"sync"
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Tbles struct {
@@ -56,6 +58,12 @@ func ReadLine(fileName string) {
 		return
 	}
 	buf := bufio.NewReader(f)
+	db, err := sql.Open("mysql", User+":"+Passswd+"@/ssdbManager?charset=utf8")
+	if err != nil {
+		fmt.Println("mysql conn fail :", err)
+		return
+	}
+
 	for {
 		line, err := buf.ReadString('\n')
 		if err != nil {
@@ -70,24 +78,65 @@ func ReadLine(fileName string) {
 		line = r.ReplaceAllString(line, "")
 		T := &Tbles{}
 		json.Unmarshal([]byte(line), &T)
-		newline := fmt.Sprintf("#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v\n", T.RecordSid, T.Server, T.SAccountID, T.SRoleName, T.SRoleID, T.SItemType, T.SItemID, T.SItemName, T.SCount, T.SMoney, T.SIP, T.SMac, T.EventID, T.DAccountID, T.DRoleName, T.DRoleID, T.DItemType, T.DItemID, T.DItemName, T.DCount, T.DMoney, T.DIP, T.DMac, T.DUUID, T.Type, T.TradeTime, T.Incorrect)
-		// var d1 = []byte(newline)
-		// err2 := ioutil.WriteFile("output2.txt", d1, 0666)
-		// if err2 != nil {
-		// 	fmt.Println(err2)
+		//newline := fmt.Sprintf("#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v#%v\n",
+		// T.RecordSid,
+		// T.Server,
+		// T.SAccountID,
+		// T.SRoleName,
+		// T.SRoleID,
+		// T.SItemType,
+		// T.SItemID,
+		// T.SItemName,
+		// T.GoodsDetail,
+		// T.SCount,
+		// T.SMoney,
+		// T.SIP,
+		// T.SMac,
+		// T.EventID,
+		// T.DAccountID,
+		// T.DRoleName,
+		// T.DRoleID,
+		// T.DItemType,
+		// T.DItemID,
+		// T.DItemName,
+		// T.DCount,
+		// T.DMoney,
+		// T.DIP,
+		// T.DMac,
+		// T.DUUID,
+		// T.Type,
+		// T.TradeTime,
+		// T.Incorrect)
+		//file
+		// f, err := os.OpenFile(table, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
 		// }
+		// n, _ := f.Seek(0, os.SEEK_END)
+		// _, err = f.WriteAt([]byte(newline), n)
+		//mysql  insert
 
-		f, err := os.OpenFile(table, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+		stmt, err := db.Prepare(`INSERT tbl_trade (record_sid,server,s_account_id,s_role_name,s_role_id,s_item_type,s_item_id,s_item_name,s_count,s_money,s_ip,s_mac,event_id,d_account_id,d_role_name,d_role_id,d_item_type,d_item_id,d_item_name,d_count,d_money,d_ip,d_mac,d_uuid,type,trade_time,incorrect) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("stmt..", err)
 			return
 		}
-
-		n, _ := f.Seek(0, os.SEEK_END)
-		_, err = f.WriteAt([]byte(newline), n)
-
+		_, err = stmt.Exec(T.RecordSid, T.Server, T.SAccountID, T.SRoleName, T.SRoleID, T.SItemType, T.SItemID, T.SItemName, T.SCount, T.SMoney, T.SIP, T.SMac, T.EventID, T.DAccountID, T.DRoleName, T.DRoleID, T.DItemType, T.DItemID, T.DItemName, T.DCount, T.DMoney, T.DIP, T.DMac, T.DUUID, T.Type, T.TradeTime, T.Incorrect)
+		if err != nil {
+			fmt.Println("exec fail .. ", err)
+			return
+		}
+		//_, err = res.LastInsertId()
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
+		stmt.Close()
+		//fmt.Println(id)
 	}
-	defer f.Close()
+	//defer f.Close()
+	defer db.Close()
 	// wg := sync.WaitGroup{}
 	// //wg.Add(938)
 	// for {
@@ -113,11 +162,13 @@ func ReadLine(fileName string) {
 
 }
 
-const (
-	table = "tbl_trade.txt"
-)
+// const (
+// 	table = "tbl_trade.txt"
+// )
 
 var LogFile string
+var User string
+var Passswd string
 
 // func Context(line string, wg *sync.WaitGroup) {
 // 	T := &Tbles{}
@@ -141,7 +192,9 @@ var LogFile string
 // }
 
 func main() {
-	flag.StringVar(&LogFile, "logfile", "tbl_trade.log", "--logfile")
+	flag.StringVar(&LogFile, "logfile", "tbl_trade.log", "--logfile : 日志路径")
+	flag.StringVar(&User, "u", "root", "-u :  mysql user")
+	flag.StringVar(&Passswd, "p", "", "-p : mysql passwd")
 	flag.Parse()
 	_, err := os.Stat(LogFile)
 	if err != nil {
