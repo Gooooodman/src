@@ -45,5 +45,9 @@ func main() {
 	if AddJob() {
 		fmt.Println("ok")
 	}
+	entries := mainCron.Entries()
+	for _, e := range entries {
+		fmt.Println(e.Schedule)
+	}
 	select {}
 }

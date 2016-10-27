@@ -20,4 +20,9 @@ func main() {
 		fmt.Printf("%s (%s = %v)\n", f.Tag, f.Name, v.Field(i).Interface())
 		//fmt.Printf("%s (%s = %v)\n", f.Tag, f.Name, v.Field(i))  一样
 	}
+
+	name := reflect.ValueOf(u).FieldByName("Name")
+	// 取值
+	fmt.Println(name.Interface())
+
 }
